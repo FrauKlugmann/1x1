@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Einmaleins- und Divisionstrainer</title>
+<style>
+  :root{
+    --bg:#f4f7fb;
+    --card:#ffffff;
+    --ink:#1f2937;
+    --muted:#667085;
+    --border:#dbe3ec;
+    --primary:#2f67b2;
+    --primary-dark:#234f8c;
+    --soft:#eef4fb;
+    --good-bg:#e9f8ee;
+    --good:#237a3b;
+    --bad-bg:#fff0f0;
+    --bad:#a13737;
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+  }
+
+  .wrap{
+    max-width:900px;
+    margin:0 auto;
+    padding:24px;
+  }
+
+  h1{
+    margin:0 0 8px;
+    font-size:clamp(1.7rem,3vw,2.35rem);
+  }
+
+  .intro{
+    margin:0 0 20px;
+    color:var(--muted);
+    line-height:1.45;
+  }
+
+  .mode-card,
+  .trainer-card,
+  .stat{
+    background:var(--card);
+    border:1px solid var(--border);
+    box-shadow:0 8px 24px rgba(31,41,55,.07);
+  }
+
+  .mode-card{
+    border-radius:18px;
+    padding:18px;
+    margin-bottom:18px;
+  }
+
+  .mode-title{
+    margin:0 0 12px;
+    font-weight:800;
+    font-size:1.05rem;
+  }
+
+  .mode-buttons{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+
+  .mode-btn{
+    min-height:58px;
+    border:2px solid #c8d3e0;
+    border-radius:14px;
+    background:#fff;
+    color:#24364d;
+    font:inherit;
+    font-weight:800;
+    cursor:pointer;
+    padding:10px 14px;
+    touch-action:manipulation;
+  }
+
+  .mode-btn.active{
+    background:#eaf2ff;
+    border-color:var(--primary);
+    color:var(--primary-dark);
+  }
+
+  .mode-info{
+    margin:12px 0 0;
+    color:var(--muted);
+    font-size:.93rem;
+    line-height:1.4;
+  }
+
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-bottom:18px;
+  }
+
+  .stat{
+    border-radius:16px;
+    padding:14px;
+    text-align:center;
+  }
+
+  .stat .label{
+    display:block;
+    color:var(--muted);
+    font-size:.92rem;
+  }
+
+  .stat .value{
+    display:block;
+    margin-top:2px;
+    font-size:1.65rem;
+    font-weight:850;
+  }
+
+  .trainer-card{
+    border-radius:20px;
+    padding:26px;
+  }
+
+  .task-label{
+    color:var(--muted);
+    font-weight:750;
+    margin-bottom:8px;
+  }
+
+  .task{
+    min-height:120px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    background:var(--soft);
+    border-radius:16px;
+    padding:24px 12px;
+    margin-bottom:20px;
+    font-size:clamp(2.3rem,7vw,4.4rem);
+    line-height:1;
+    font-weight:850;
+  }
+
+  .answer-row{
+    display:flex;
+    gap:10px;
+    align-items:stretch;
+  }
+
+  .answer{
+    flex:1;
+    min-width:0;
+    border:2px solid #b9c6d6;
+    border-radius:14px;
+    background:#fff;
+    color:var(--ink);
+    padding:14px 16px;
+    font:inherit;
+    font-size:1.45rem;
+    font-weight:750;
+    text-align:center;
+    outline:none;
+  }
+
+  .answer.answer-correct{
+    background:var(--good-bg);
+    border-color:#38a169;
+    color:var(--good);
+  }
+
+  .answer.answer-wrong{
+    background:var(--bad-bg);
+    border-color:#e05252;
+    color:var(--bad);
+  }
+
+  button{
+    appearance:none;
+    border:0;
+    border-radius:14px;
+    font:inherit;
+    font-weight:800;
+    cursor:pointer;
+  }
+
+  .check{
+    min-width:120px;
+    background:var(--primary);
+    color:white;
+    padding:12px 18px;
+  }
+
+  .check:active,
+  .mode-btn:active,
+  .key:active{
+    transform:scale(.98);
+  }
+
+  .keypad{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    max-width:440px;
+    margin:16px auto 0;
+  }
+
+  .key{
+    min-height:64px;
+    padding:8px;
+    border:1px solid #cbd5e1;
+    background:#f7f9fc;
+    color:#1f2937;
+    font-size:1.55rem;
+    touch-action:manipulation;
+  }
+
+  .key.zero{grid-column:span 2}
+  .key.clear{background:#fff0f0;color:#a13737}
+  .key.back{background:#eef1f5}
+
+  .feedback{
+    min-height:52px;
+    margin-top:15px;
+    padding:12px 14px;
+    border-radius:14px;
+    font-weight:800;
+    visibility:hidden;
+    text-align:center;
+  }
+
+  .feedback.good{
+    visibility:visible;
+    color:var(--good);
+    background:var(--good-bg);
+  }
+
+  .feedback.bad{
+    visibility:visible;
+    color:var(--bad);
+    background:var(--bad-bg);
+  }
+
+  .note{
+    margin-top:16px;
+    color:var(--muted);
+    font-size:.92rem;
+    line-height:1.4;
+    text-align:center;
+  }
+
+  @media (max-width:650px){
+    .wrap{padding:14px}
+    .mode-buttons{grid-template-columns:1fr}
+    .stats{grid-template-columns:1fr}
+    .trainer-card{padding:18px}
+    .answer-row{flex-direction:column}
+    .check{min-height:52px;width:100%}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Einmaleins- und Divisionstrainer</h1>
+  <p class="intro">
+    Wähle die passende Übungsstufe und anschließend Multiplikation oder Division.
+    Danach erscheinen die Aufgaben automatisch. Eine Aufgabe kann nicht übersprungen werden.
+  </p>
+
+  <section class="mode-card" aria-label="Übungsstufe auswählen">
+    <p class="mode-title">Übungsstufe</p>
+    <div class="mode-buttons">
+      <button type="button" class="mode-btn active" id="supportMode">
+        Lernförderschüler
+      </button>
+      <button type="button" class="mode-btn" id="regularMode">
+        Regelschüler
+      </button>
+    </div>
+  </section>
+
+  <section class="mode-card" aria-label="Rechenart auswählen">
+    <p class="mode-title">Rechenart</p>
+    <div class="mode-buttons">
+      <button type="button" class="mode-btn active" id="multiplicationMode">
+        Multiplikation
+      </button>
+      <button type="button" class="mode-btn" id="divisionMode">
+        Division
+      </button>
+    </div>
+  </section>
+
+  <section class="stats" aria-label="Auswertung">
+    <div class="stat">
+      <span class="label">Richtig</span>
+      <span class="value" id="correct">0</span>
+    </div>
+    <div class="stat">
+      <span class="label">Gelöst</span>
+      <span class="value" id="total">0</span>
+    </div>
+    <div class="stat">
+      <span class="label">Richtig in %</span>
+      <span class="value" id="percent">0 %</span>
+    </div>
+  </section>
+
+  <main class="trainer-card">
+    <div class="task-label">Aufgabe</div>
+    <div class="task" id="task" aria-live="polite">–</div>
+
+    <div class="answer-row">
+      <input
+        id="answer"
+        class="answer"
+        type="text"
+        inputmode="none"
+        readonly
+        placeholder="Ergebnis"
+        aria-label="Ergebnis"
+      >
+      <button type="button" class="check" id="checkBtn">Prüfen</button>
+    </div>
+
+    <div class="keypad" aria-label="Bildschirmtastatur">
+      <button type="button" class="key" data-key="7">7</button>
+      <button type="button" class="key" data-key="8">8</button>
+      <button type="button" class="key" data-key="9">9</button>
+
+      <button type="button" class="key" data-key="4">4</button>
+      <button type="button" class="key" data-key="5">5</button>
+      <button type="button" class="key" data-key="6">6</button>
+
+      <button type="button" class="key" data-key="1">1</button>
+      <button type="button" class="key" data-key="2">2</button>
+      <button type="button" class="key" data-key="3">3</button>
+
+      <button type="button" class="key zero" data-key="0">0</button>
+      <button type="button" class="key back" data-key="back">⌫</button>
+      <button type="button" class="key clear" data-key="clear">C</button>
+    </div>
+
+    <div class="feedback" id="feedback" aria-live="polite"></div>
+
+    <div class="note">
+      Richtig: Das Eingabefeld wird grün und automatisch erscheint die nächste Aufgabe.
+      Falsch: Das Feld wird rot und dieselbe Aufgabe bleibt stehen.
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+  const supportModeBtn = document.getElementById('supportMode');
+  const regularModeBtn = document.getElementById('regularMode');
+
+  const multiplicationModeBtn = document.getElementById('multiplicationMode');
+  const divisionModeBtn = document.getElementById('divisionMode');
+
+  const taskEl = document.getElementById('task');
+  const answerEl = document.getElementById('answer');
+  const feedbackEl = document.getElementById('feedback');
+  const correctEl = document.getElementById('correct');
+  const totalEl = document.getElementById('total');
+  const percentEl = document.getElementById('percent');
+  const checkBtn = document.getElementById('checkBtn');
+
+  let mode = 'support';
+  let operation = 'multiplication';
+  let currentAnswer = 0;
+  let correct = 0;
+  let total = 0;
+  let locked = false;
+
+  const rint = (min,max) => Math.floor(Math.random()*(max-min+1))+min;
+
+  function updateStats(){
+    correctEl.textContent = correct;
+    totalEl.textContent = total;
+    const pct = total === 0 ? 0 : Math.round((correct/total)*100);
+    percentEl.textContent = pct + ' %';
+  }
+
+  function resetStats(){
+    correct = 0;
+    total = 0;
+    updateStats();
+  }
+
+  function makeSupportMultiplicationTask(){
+    const a = rint(1,10);
+    const b = rint(1,10);
+    return { text: `${a} · ${b}`, answer: a*b };
+  }
+
+  function makeRegularMultiplicationTask(){
+    // Mischung: etwa 40 % kleines Einmaleins, 60 % ein einstelliger und ein zweistelliger Faktor.
+    if(Math.random() < 0.4){
+      return makeSupportMultiplicationTask();
+    }
+
+    const oneDigit = rint(2,9);
+    const twoDigit = rint(10,99);
+    const swap = Math.random() < 0.5;
+
+    return swap
+      ? { text: `${twoDigit} · ${oneDigit}`, answer: twoDigit*oneDigit }
+      : { text: `${oneDigit} · ${twoDigit}`, answer: oneDigit*twoDigit };
+  }
+
+  function makeSupportDivisionTask(){
+    // Umkehraufgaben zum kleinen Einmaleins, immer ohne Rest.
+    const divisor = rint(1,10);
+    const quotient = rint(1,10);
+    const dividend = divisor * quotient;
+    return { text: `${dividend} : ${divisor}`, answer: quotient };
+  }
+
+  function makeRegularDivisionTask(){
+    // Mischung aus Umkehraufgaben des kleinen Einmaleins und größeren Divisionen.
+    if(Math.random() < 0.4){
+      return makeSupportDivisionTask();
+    }
+
+    // Quotient zweistellig, Divisor einstellig; Division geht immer ohne Rest auf.
+    const divisor = rint(2,9);
+    const quotient = rint(10,99);
+    const dividend = divisor * quotient;
+    return { text: `${dividend} : ${divisor}`, answer: quotient };
+  }
+
+  function makeTask(){
+    let t;
+
+    if(operation === 'multiplication'){
+      t = mode === 'support'
+        ? makeSupportMultiplicationTask()
+        : makeRegularMultiplicationTask();
+    } else {
+      t = mode === 'support'
+        ? makeSupportDivisionTask()
+        : makeRegularDivisionTask();
+    }
+
+    currentAnswer = t.answer;
+    taskEl.textContent = t.text;
+    answerEl.value = '';
+    answerEl.classList.remove('answer-correct','answer-wrong');
+    feedbackEl.className = 'feedback';
+    feedbackEl.textContent = '';
+    locked = false;
+  }
+
+  function setMode(newMode){
+    if(mode === newMode) return;
+    mode = newMode;
+
+    supportModeBtn.classList.toggle('active', mode === 'support');
+    regularModeBtn.classList.toggle('active', mode === 'regular');
+
+
+    makeTask();
+  }
+
+  function setOperation(newOperation){
+    if(operation === newOperation) return;
+    operation = newOperation;
+
+    multiplicationModeBtn.classList.toggle('active', operation === 'multiplication');
+    divisionModeBtn.classList.toggle('active', operation === 'division');
+
+
+    makeTask();
+  }
+
+  function checkAnswer(){
+    if(locked) return;
+
+    const raw = answerEl.value.trim();
+
+    if(raw === ''){
+      answerEl.classList.add('answer-wrong');
+      feedbackEl.className = 'feedback bad';
+      feedbackEl.textContent = 'Bitte zuerst ein Ergebnis eingeben.';
+      return;
+    }
+
+    const userAnswer = Number(raw);
+    if(!Number.isInteger(userAnswer)){
+      answerEl.classList.add('answer-wrong');
+      feedbackEl.className = 'feedback bad';
+      feedbackEl.textContent = 'Bitte eine ganze Zahl eingeben.';
+      return;
+    }
+
+    total++;
+
+    if(userAnswer === currentAnswer){
+      correct++;
+      locked = true;
+
+      answerEl.classList.remove('answer-wrong');
+      answerEl.classList.add('answer-correct');
+      feedbackEl.className = 'feedback good';
+      feedbackEl.textContent = 'Richtig!';
+
+      updateStats();
+      setTimeout(makeTask, 700);
+    } else {
+      answerEl.classList.remove('answer-correct');
+      answerEl.classList.add('answer-wrong');
+      feedbackEl.className = 'feedback bad';
+      feedbackEl.textContent = 'Noch nicht richtig – versuche es noch einmal.';
+      updateStats();
+    }
+  }
+
+  document.querySelectorAll('.keypad .key').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(locked) return;
+
+      const key = btn.dataset.key;
+      answerEl.classList.remove('answer-wrong');
+      feedbackEl.className = 'feedback';
+      feedbackEl.textContent = '';
+
+      if(key === 'clear'){
+        answerEl.value = '';
+      } else if(key === 'back'){
+        answerEl.value = answerEl.value.slice(0,-1);
+      } else {
+        let v = answerEl.value;
+        if(v === '0') v = '';
+        // Maximal dreistellig reicht bei 99 · 9 = 891.
+        if(v.length < 3) answerEl.value = v + key;
+      }
+    });
+  });
+
+  checkBtn.addEventListener('click', checkAnswer);
+  supportModeBtn.addEventListener('click', () => setMode('support'));
+  regularModeBtn.addEventListener('click', () => setMode('regular'));
+  multiplicationModeBtn.addEventListener('click', () => setOperation('multiplication'));
+  divisionModeBtn.addEventListener('click', () => setOperation('division'));
+
+  makeTask();
+})();
+</script>
+</body>
+</html>
